@@ -73,8 +73,7 @@ module.exports = function CircularBuffer(opts) {
 	function setBuffer(newSize) {
 		// Add 1 byte of padding to the buffer to make the overall implementation easier
 		var oldLength = self.length;
-		var newBuffer = new Buffer(newSize + 1);
-		newBuffer.fill(0);
+		var newBuffer = Buffer.alloc(newSize + 1);
 		if (buffer instanceof Buffer) self.copy(newBuffer);
 		buffer = newBuffer;
 		head = 0;
@@ -100,11 +99,10 @@ module.exports = function CircularBuffer(opts) {
 
 	function decode(buffer, encoding) {
 		validateEncoding(encoding);
-		if (encoding === null || encoding === 'buffer') return [buffer, new Buffer(0)];
+		if (encoding === null || encoding === 'buffer') return Buffer.concat([buffer, Buffer.alloc(0)]);
 		var decoder = new StringDecoder(encoding);
 		var str = decoder.write(buffer);
-		var leftover = decoder.charBuffer.slice(0, decoder.charReceived);
-		return [str, leftover];
+		return str;
 	}
 
 
@@ -171,12 +169,12 @@ module.exports = function CircularBuffer(opts) {
 		if (encoding === null) {
 			// The buffer returned by `buffer.slice` shares memory with the original.
 			// We concat with an empty buffer to copy it to unshared memory.
-			if (end >= head) data = Buffer.concat([data, new Buffer(0)], n);
+			if (end >= head) data = Buffer.concat([data, Buffer.alloc(0)], n);
 			return data;
 		}
 
 		// Decode the string without spliting multibyte characters
-		return decode(data, encoding)[0];
+		return decode(data, encoding);
 	};
 
 
@@ -205,10 +203,11 @@ module.exports = function CircularBuffer(opts) {
 
 		var data = this.peek(n, 'buffer');
 		var decoded = decode(data, encoding);
-		var leftover = decoded[1];
-		head += data.length - leftover.length;
+
+		//decoded will return empty string if in the middle of a multibyte character
+		head += decoded.length ? data.length : 0;
 		head %= buffer.length;
-		return decoded[0];
+		return decoded;
 	};
 
 
@@ -328,7 +327,7 @@ module.exports = function CircularBuffer(opts) {
 
 		if (typeof chunk === 'string') {
 			// Cast `chunk` to a Buffer. The encoding is validated by the `Buffer` constructor.
-			chunk = new Buffer(chunk, encoding);
+			chunk = Buffer.from(chunk, encoding);
 		}
 
 		if (this.length + chunk.length >= buffer.length) {
@@ -360,7 +359,7 @@ module.exports = function CircularBuffer(opts) {
 
 		if (typeof chunk === 'string') {
 			// Cast `chunk` to a Buffer. The encoding is validated by the `Buffer` constructor.
-			chunk = new Buffer(chunk, encoding);
+			chunk = Buffer.from(chunk, encoding);
 		}
 
 		if (this.length + chunk.length >= buffer.length) {

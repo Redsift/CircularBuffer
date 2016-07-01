@@ -45,8 +45,8 @@ describe('CircularBuffer', function () {
 		});
 
 		it('allows setting the default encoding', function () {
-			var utf8 = new Buffer('test', 'utf8');
-			var utf16 = new Buffer('test', 'utf16le');
+			var utf8 = Buffer.from('test', 'utf8');
+			var utf16 = Buffer.from('test', 'utf16le');
 
 			var buffer1 = new CircularBuffer();           // The default encoding is utf8
 			buffer1.write('test');                        //
@@ -177,10 +177,10 @@ describe('CircularBuffer', function () {
 		it('copies content into a regular Buffer', function () {
 			var buffer = new CircularBuffer({size:11});    // -> [.|___________]
 			buffer.write('hello world');                   // -> [.hello world|]
-			var hello = new Buffer(5);                     //
+			var hello = Buffer.alloc(5);                     //
 			buffer.copy(hello, null, null, 5);             // `sourceStart` and `targetStart`
 			expect(hello.toString()).to.equal('hello');    // default to 0
-			var world = new Buffer(5);                     //
+			var world = Buffer.alloc(5);                     //
 			buffer.copy(world, 0, 6, Infinity);            // out-of-bounds arguments are set to
 			expect(world.toString()).to.equal('world');    // their defaults
 		});
@@ -188,10 +188,10 @@ describe('CircularBuffer', function () {
 		it('returns the number of bytes copied', function () {
 			var buffer = new CircularBuffer({size:11});    // -> [.|___________]
 			buffer.write('hello world');                   // -> [.hello world|]
-			var hello = new Buffer(5);                     //
+			var hello = Buffer.alloc(5);                     //
 			var len1 = buffer.copy(hello, null, null, 5);  //
 			expect(len1).to.equal(5);                      //
-			var world = new Buffer(5);                     //
+			var world = Buffer.alloc(5);                     //
 			var len2 = buffer.copy(world, 0, 6, Infinity); //
 			expect(len2).to.equal(5);                      //
 		});
@@ -291,10 +291,10 @@ describe('CircularBuffer', function () {
 			var toBeWritten;                              //
 			expect(buffer.length).to.equal(0);            //
 			expect(buffer.peek()).to.equal('');           //
-			toBeWritten = new Buffer('foo');              //
+			toBeWritten = Buffer.from('foo');              //
 			buffer.write(toBeWritten);                    // -> [.foo|_]
 			expect(buffer.peek()).to.equal('foo');        //
-			toBeWritten = new Buffer('bar');              //
+			toBeWritten = Buffer.from('bar');              //
 			buffer.write(toBeWritten);                    // -> [.foobar|__]
 			expect(buffer.peek()).to.equal('foobar');     //
 		});
@@ -317,10 +317,10 @@ describe('CircularBuffer', function () {
 			var toBeWritten;                              //
 			expect(buffer.length).to.equal(0);            //
 			expect(buffer.peek()).to.equal('');           //
-			toBeWritten = new Buffer('bar');              //
+			toBeWritten = Buffer.from('bar');              //
 			buffer.writeBack(toBeWritten);                // -> [|___.bar]
 			expect(buffer.peek()).to.equal('bar');        //
-			toBeWritten = new Buffer('foo');              //
+			toBeWritten = Buffer.from('foo');              //
 			buffer.writeBack(toBeWritten);                // -> [|.foobar]
 			expect(buffer.peek()).to.equal('foobar');     //
 		});
@@ -340,7 +340,7 @@ describe('CircularBuffer', function () {
 
 	it('should deal with read-then-expand', function() {
 		var buffer = new CircularBuffer({ size: 2, encoding: 'buffer' });
-		var buf = new Buffer([1,2,3,4]);
+		var buf = Buffer.from([1,2,3,4]);
 		buffer.write(buf.slice(0, 2));
 		buffer.read(1);
 		buffer.write(buf.slice(2, 4));
